@@ -1,21 +1,20 @@
-import os
-from pathlib import Path
-#from chart_functions import hex_to_rgb
 import pandas as pd
-
+path=r"C:\Users\ameil\Documents\Viz Saves\Player"
 DATADir=r"C:\Users\ameil\Documents\GitHub\Historical data by gameweek.csv"
 features = ["involvement", "distribution", "goal-threat", "defending", "set-pieces", "kpi-attacking", "kpi-defending","expected"]
 teams = pd.DataFrame()
-teams["Team"] = ['ARS','AVL','BHA','BUR','CHE','CRY','EVE','FUL','LEE','LEI','LIV','MCI','MUN','NEW','SHU','SOU','TOT','WBA','WHU','WOL']
+teams["Team"] = ['ARS','AVL','BHA','BUR','CHE','CRY','EVE','FUL','LEE','LEI','LIV','MCI','MUN','NEW','SHU','SOU','TOT','WBA','WHU','WOL',"BRE","WAT","NOR"]
 colours = ["#EE3B3B", "#942257", "#afd6f0", "#631938"
     , "#1c19a8", "#500678", "#3d64e3", "#eff0e9"
     , "#eff0e9", "#4157c4"
     , "#c20245", "#04becf", "#de020a"
     , "#877777", "#e65353", "#ff001e", "#FFFFFF"
-    , "#022873", "#70072f", "#f59247"]
+    , "#022873", "#70072f", "#f59247","#8f1e07","#e3df5f","#ebe307"]
 dict_team={k:v for k,v in zip(teams["Team"], colours)}
 teams["Colours"]=teams['Team'].map(dict_team)
-#teams["ColoursRGB"] = teams["Colours"].apply(hex_to_rgb)
+pos_colours = ['green', 'blue', 'cyan']
+positions=["Defender","Midfielder","Forward"]
+
 columns_used = ['Name',
                 'Season',
                 'Position', "GW ID",

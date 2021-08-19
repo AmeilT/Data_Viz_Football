@@ -1,7 +1,7 @@
 import numpy as np
 
 title_font="Franklin Gothic Medium"
-title_size=14
+title_size=40
 label_font="Franklin Gothic Medium"
 label_size=9
 text_colour="w"
