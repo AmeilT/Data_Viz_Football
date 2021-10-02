@@ -4,10 +4,23 @@ from adjustText import adjust_text
 import re
 import seaborn as sns
 import networkx as nx
-from data_viz_constants import title_font, title_size, label_font, label_size, text_colour, back_colour, y_equals_x
-from constants import positions,pos_colours,path
-import matplotlib.patches as patches
 import pandas as pd
+import math
+
+from data_viz_constants import title_font, title_size, label_size, text_colour, back_colour, y_equals_x
+from constants import positions,pos_colours,path,teams
+import matplotlib.patches as patches
+
+def import_data(DATADir):
+    df = pd.read_csv(DATADir)
+    df = df.rename(columns={"GW ID": "Gameweek"})
+    df = df.merge(teams, on=["Team"])
+    df["Name"] = df["Name"].apply(namescleaner)
+    df["InvolvementGI"]=df["GoalsG"]+df["AssistsA"]
+    df["Attempts"]=90/df["AttemptsM/C"]
+    df["Attempts"]=[0 if math.isinf(x) else x for x in df["Attempts"]]
+    df["npxG"]=df["GoalsxG"]-0.8*df["Goals from Penalties"]
+    df["DeltaAssists"]=(df["Assists"]-df["Chances Created"])
 
 def hex_to_rgb(hx, hsl=True):
     """Converts a HEX code into RGB or HSL.
@@ -93,7 +106,78 @@ def create_expected_player_graph(data, x1, x2, y, xtitle, ytitle,position, plott
                   bbox={'facecolor': facecolor, 'alpha': 0.3, 'pad': 10})
     else:
         pass
+    filepath=f"Scatter for {position} showing {x1} vs {x2}"
+    fig.set_size_inches(10.2, 9)
+    fig.savefig(filepath)
 
+def create_expected_player_graph_size(data, x1, x2, y, xtitle, ytitle,position, plottitle, gameweekrange,marker_size):
+    # Create Figure (empty canvas)
+    fig, axes = plt.subplots()
+    #plt.rcParams["text.usetex"] = True
+    #rc('text.latex', preamble=r'\usepackage[cm]{sfmath}')
+    axes.grid(False)
+    # colours
+    plt.rcParams['figure.facecolor'] = back_colour
+    axes.set_facecolor(back_colour)
+    fig.patch.set_facecolor(back_colour)
+    axes.spines['left'].set_color(text_colour)
+    axes.spines['bottom'].set_color(text_colour)
+    axes.spines['top'].set_visible(False)
+    axes.tick_params(axis='x', colors=text_colour)
+    axes.tick_params(axis='y', colors=text_colour)
+    season=data["Season"].mode().iloc[0]
+
+
+    #Titles
+    shift=0.03
+    plt.figtext(0.1,0.97,f"Premier League {season}-{season+1}",color="w",size=15)
+    plt.figtext(0.1,1-shift*1.8,f"{position}s",color="w",size=12)
+    plt.figtext(0.1,1-shift*2.5,f"Gameweeks {gameweekrange[0]} to {gameweekrange[1]}",color="w",size=12)
+    plt.figtext(0.1,1-shift*3.3,plottitle,color="w",size=12)
+
+    # Plot on that set of axes
+    axes.scatter(data[x1], data[x2])
+    axes.set_xlabel(xtitle, color=text_colour,family = 'sans-serif')  # Notice the use of set_ to begin methods
+    axes.set_ylabel(ytitle, color=text_colour,family = 'sans-serif')
+
+
+    #Make any top performers transparent
+    # Label Points
+    season = data["Season"].mode()[0]
+    texts = []
+    for x, y, s, n in zip(data[x1], data[x2], data["Name"], data["Season"]):
+        if (n == season) == False:
+            texts.append(
+                plt.text(x, y, s, color=text_colour,
+                         fontsize=label_size, fontstyle="italic", alpha=0.6, va="center"))
+        else:
+            texts.append(
+                plt.text(x, y, s, color=text_colour,
+                         fontsize=label_size, va="center"))
+    adjust_text(texts, arrowprops=dict(arrowstyle='-', color='w', connectionstyle="angle3,angleA=0,angleB=-90",
+                                       relpos=(0.5, 0.5)))
+    for i in np.arange(0, data.shape[0]):
+        plt.plot(data[x1].iloc[i], data[x2].iloc[i], color="#020530", markeredgecolor=data["Colours"].iloc[i],
+                 markeredgewidth=2, marker="o", markersize=100*data[marker_size].iloc[i]/data[marker_size].sum())
+        # text boxes
+        facecolor = "w"
+    if x1 == "xG Expected GoalsG":
+        axes.text(0.4, 2, 'Unlucky teams', style='italic',
+                  bbox={'facecolor': facecolor, 'alpha': 0.3, 'pad': 10})
+
+        axes.text(1.9, 0.5, 'Lucky teams', style='italic',
+                  bbox={'facecolor': facecolor, 'alpha': 0.3, 'pad': 10})
+    elif x2 == "xG Expected GoalsG":
+        axes.text(0.4, 2, 'Lucky teams', style='italic',
+                  bbox={'facecolor': facecolor, 'alpha': 0.3, 'pad': 10})
+
+        axes.text(1.9, 0.5, 'Unlucky teams', style='italic',
+                  bbox={'facecolor': facecolor, 'alpha': 0.3, 'pad': 10})
+    else:
+        pass
+    filepath=f"Scatter for {position} showing {x1} vs {x2}, size: {marker_size}"
+    fig.set_size_inches(10.2, 9)
+    fig.savefig(filepath)
 
 def hbarplot(data, x1, x2, y, ytitle, xtitle, plottitle, gameweekrange,filepath):
     sns.set_theme(style="whitegrid")
@@ -144,6 +228,9 @@ def hbarplot(data, x1, x2, y, ytitle, xtitle, plottitle, gameweekrange,filepath)
     sns.despine(left=True, bottom=True)
     fig.savefig(filepath,bbox_inches='tight')
 
+    fig.set_size_inches(12.6, 6.7)
+    fig.savefig(filepath)
+
 def hbarplot_players(data, x1, x2, y, x1title,x2title,ytitle, plottitle, gameweekrange,filepath):
     sns.set_theme(style="whitegrid")
 
@@ -192,8 +279,8 @@ def hbarplot_players(data, x1, x2, y, x1title,x2title,ytitle, plottitle, gamewee
     axes.set(ylabel=ytitle,xlabel=x2title)
     sns.despine(left=True, bottom=True)
 
+    fig.set_size_inches(12.6, 6.7)
     fig.savefig(filepath)
-
 def hbarplot_players_colours(data, x1, y, x1title,ytitle, plottitle, gameweekrange,positions=positions,pos_colours=pos_colours,N=15,filepath=path):
     sns.set_theme(style="whitegrid")
 
@@ -232,17 +319,17 @@ def hbarplot_players_colours(data, x1, y, x1title,ytitle, plottitle, gameweekran
     top_xg=data.sort_values(x1,ascending=False).head(N)
     sns.set_color_codes("pastel")
     for position,colour in list(zip(positions,pos_colours)):
-        sns.barplot(x=top_xg[top_xg["Position"]==position][x1], y=y, data=data,
-                    label=position, color=colour, alpha=0.8)
-
-
-
+            if top_xg[top_xg["Position"]==position]["GoalsxG"].size==0:
+                pass
+            else:
+                sns.barplot(x=top_xg[top_xg["Position"] == position][x1], y=y, data=data,
+                            label=position, color=colour, alpha=0.8)
     # Add a legend and informative axis label
     axes.legend(ncol=2, loc="lower right", frameon=True)
     axes.set(ylabel=ytitle,xlabel=x1title)
     sns.despine(left=True, bottom=True)
+    fig.set_size_inches(12.6, 6.7)
     fig.savefig(filepath)
-
 def hbarplot_players_colours_hatch(data, x3,x2, y, x1title,ytitle, plottitle, gameweekrange,positions=positions,pos_colours=pos_colours,N=15,filepath=path):
     sns.set_theme(style="whitegrid")
 
@@ -276,19 +363,20 @@ def hbarplot_players_colours_hatch(data, x3,x2, y, x1title,ytitle, plottitle, ga
         axes.set_title(f"{plottitle}\nbetween gameweek {gameweekrange[0]} and {gameweekrange[1]}", color="w",
                        loc="left", size=title_size, font=title_font)
 
-    # Plot 1
     top_xg=data.sort_values(x2,ascending=False).head(N)
     sns.set_color_codes("pastel")
     for position,colour in list(zip(positions,pos_colours)):
-        bar1=sns.barplot(x=top_xg[top_xg["Position"]==position][x2], y=y, data=data,
-                    label=position, color=colour, alpha=0.8)
-        if position==positions[0]:
-            sns.barplot(x=top_xg[top_xg["Position"] == position][x3], y=y, data=data,
-                    label="xAssists", color=colour, alpha=0.8,hatch="xx")
+        if position in top_xg["Position"].values:
+            bar1=sns.barplot(x=top_xg[top_xg["Position"]==position][x2], y=y, data=data,
+                        label=position, color=colour, alpha=0.8)
+            if position==positions[0]:
+                sns.barplot(x=top_xg[top_xg["Position"] == position][x3], y=y, data=data,
+                        label="xAssists", color=colour, alpha=0.8,hatch="xx")
+            else:
+                sns.barplot(x=top_xg[top_xg["Position"] == position][x3], y=y, data=data,
+                            label="", color=colour, alpha=0.8, hatch="xx")
         else:
-            sns.barplot(x=top_xg[top_xg["Position"] == position][x3], y=y, data=data,
-                        label="", color=colour, alpha=0.8, hatch="xx")
-
+            pass
 
     # Add a legend and informative axis label
     axes.legend(ncol=2, loc="lower right", frameon=True)
@@ -301,8 +389,8 @@ def hbarplot_players_colours_hatch(data, x3,x2, y, x1title,ytitle, plottitle, ga
     rects=[rect1,rect2,rect3,rect4]
     positions.append("xAssists")
     axes.legend(rects, positions)
+    fig.set_size_inches(12.6, 6.7)
     fig.savefig(filepath)
-
 def stacked_hbarplot_players(data,y, xtitle, plottitle, gameweekrange,filepath):
     sns.set_theme(style="whitegrid")
 
@@ -355,9 +443,10 @@ def stacked_hbarplot_players(data,y, xtitle, plottitle, gameweekrange,filepath):
 
     axes.set(xlabel=xtitle)
     sns.despine(left=True, bottom=True)
+    fig.set_size_inches(12.6, 6.7)
     fig.savefig(filepath)
 
-def stacked_hbarplot_players_grid(PL_data_season_filter,gameweek_range,N,sort_name,positions,filepath,x2,x2_title):
+def stacked_hbarplot_players_grid(PL_data_season_filter,gameweek_range,N,sort_name,filepath,x2,x2_title):
     # Plot stacked xG by Gameweek
     plottitle=f"Top {N} players by {sort_name} by Gameweek"
 
@@ -373,20 +462,20 @@ def stacked_hbarplot_players_grid(PL_data_season_filter,gameweek_range,N,sort_na
     titlecolor = "w"
 
     colours=["b","g","r","m","c"]
+    positions = ["Defender", "Midfielder", "Forward"]
     a=list(zip(range(gameweek_range[0],gameweek_range[1]+1),colours))
-    positions.append("r")
-    for i,position in enumerate(positions[::-1]):
+    b=positions + ["r"]
+    for i,position in enumerate(b[::-1]):
         for x,colour in a:
             # Plot
             df_stacked = PL_data_season_filter[["Name", "Gameweek", x2, "Position"]]
             df_stacked = df_stacked[df_stacked["Position"].str.contains(position)]
-            test = pd.pivot_table(df_stacked, index='Name', values=x2, columns='Gameweek')
             gw_list = range(gameweek_range[0],gameweek_range[1]+1)
+            test = pd.pivot_table(df_stacked, index='Name', values=x2, columns='Gameweek')
             test = cumm_calc_gw(test, gw_list, N)
             filepath = f"{x2},Top {N} Player by {sort_name} by Gameweek"
-            gw_list = range(gameweek_range[0],gameweek_range[1]+1)
             sns.set_color_codes("pastel")
-            test=test.sort_values(f"Cummulative GW {x}",ascending=True)
+            test=test.sort_values(f"Cummulative GW {gameweek_range[-1]}",ascending=True)
             y="Name"
             axes[i].barh(width=test[f"Cummulative GW {x}"], y=y,data=test,label=f"Gameweek {x}", color=colour,zorder=len(gw_list)-gw_list.index(x))
             #Axes of Subplot
@@ -395,7 +484,7 @@ def stacked_hbarplot_players_grid(PL_data_season_filter,gameweek_range,N,sort_na
             axes[i].tick_params(axis='x', colors=titlecolor)
             axes[i].set_facecolor(backcolour)
             fig.patch.set_facecolor(backcolour)
-            plt.xlabel("xtitle")
+            plt.xlabel("")
             axes[i].grid(False)
             axes[i].xaxis.grid()  # vertical lines
             axes[i].set_title(f"{position}s", color="w",
@@ -417,14 +506,98 @@ def stacked_hbarplot_players_grid(PL_data_season_filter,gameweek_range,N,sort_na
 
 
     # Put a legend below current axis
+    axes[3].legend(ncol=2, loc="lower right", frameon=True)
+    a=list(zip(range(gameweek_range[0],gameweek_range[1]+1),colours))
+    rect=[]
+    gw_list=[]
+    for gw,colour in a:
+        rect1 = patches.Rectangle((0,0),1,1,facecolor=colour)
+        rect.append(rect1)
+        gw_list.append(f"Gameweek {gw}")
 
-    #axes.legend(loc='upper center', bbox_to_anchor=(0.5, -0.09),
-              #fancybox=True, shadow=True, ncol=len(gw_list))
+    axes[3].legend(ncol=2, loc="lower right", frameon=True)
+    axes[3].legend(rect,gw_list)
 
     #axes.set(xlabel="xtitle")
     sns.despine(left=True, bottom=True)
+    fig.set_size_inches(12.6, 6.7)
     fig.savefig(filepath)
+def hbarplot_players_grid(data,gameweek_range,N,sort_name,filepath,x1,x2,x1_title,x2_title,plottitle,sort,boo,positions=["Defender","Midfielder","Forward"]):
+    # Plot stacked xG by Gameweek
 
+    # Initialize the matplotlib figure
+    nrows=2
+    ncolumns=2
+    fig, axes = plt.subplots(nrows,ncolumns,sharex=True)
+    axes = axes.flatten()
+    sns.set_theme(style="whitegrid")
+
+    # colours
+    backcolour = "#020530"
+    titlecolor = "w"
+    b=positions.copy()
+    b=b+["r"]
+    print(positions)
+    for i,position in enumerate(b[::-1]):
+        # Plot
+        sns.set_color_codes("pastel")
+        filepath = f"{x2},Top {N} Players by {sort_name} by Gameweek"
+        y="Name"
+        filter = data[data["Position"].str.contains(position)]
+
+        if sort in [x1,x2]:
+            sort_pos_in_list=[x1, x2].index(sort)
+            filter = filter[["Name",[x1,x2][sort_pos_in_list],[x1,x2][1-sort_pos_in_list]]]
+        else:
+            filter = filter[["Name", sort, x1, x2]]
+
+        filter.sort_values(sort, ascending=boo, inplace=True)
+        filter_top = filter.head(15)
+        if boo==True:
+            filter_top.sort_values(sort, ascending=False, inplace=True)
+        else:
+            filter_top.sort_values(sort, ascending=True, inplace=True)
+        axes[i].barh(width=filter_top[x1], y=y,data=filter_top,label=f"{x1_title}", color="r",alpha=0.8)
+        axes[i].barh(width=filter_top[x2], y=y,data=filter_top,label=f"{x2_title}", color="b",alpha=0.6)
+
+        #Axes of Subplot
+        axes[i].set_ylabel("", color=titlecolor)
+        axes[i].tick_params(axis='y', colors=titlecolor)
+        axes[i].tick_params(axis='x', colors=titlecolor)
+        axes[i].set_facecolor(backcolour)
+        fig.patch.set_facecolor(backcolour)
+        plt.xlabel("")
+        axes[i].grid(False)
+        axes[i].xaxis.grid()  # vertical lines
+        axes[i].set_title(f"{position}s", color="w",
+                          loc="left", size=title_size, font=title_font)
+        if position=="r":
+            axes[i].set_title(f"All Players", color="w",loc = "left", size = title_size, font = title_font)
+
+    #Title
+    if gameweek_range == "ALL":
+        fig.suptitle(f"{plottitle}\n 21/22 Season so far", color="w", size=title_size,font=title_font,x=0.1, y=0.97, horizontalalignment='left', verticalalignment='top')
+    elif gameweek_range[0] == gameweek_range[1]:
+        fig.suptitle(f"{plottitle}\nGameweek {gameweek_range[0]}", color="w",
+                       size=title_size, font=title_font,x=0.1, y=0.97, horizontalalignment='left', verticalalignment='top')
+    else:
+        fig.suptitle(f"{plottitle}\nbetween gameweek {gameweek_range[0]} and {gameweek_range[1]}", color="w", size=title_size, font=title_font,x=0.1, y=0.97, horizontalalignment='left', verticalalignment='top')
+
+    fig.supxlabel(f"{x2_title}",color=titlecolor)
+    plt.rcParams['figure.facecolor'] = backcolour
+
+
+    # Put a legend below current axis
+    axes[3].legend(ncol=2, loc="lower right", frameon=True)
+    rect1 = patches.Rectangle((0, 0), 1, 1, facecolor="r")
+    rect2 = patches.Rectangle((0, 0), 1, 1, facecolor="b")
+
+    rects = [rect1, rect2]
+    axes[3].legend(rects, [x1_title,x2_title])
+
+    sns.despine(left=True, bottom=True)
+    fig.set_size_inches(12.6, 6.7)
+    fig.savefig(filepath)
 def namescleaner(x):
     for y in ["van ", "Van ", "de", "De", "el", "El","C"]:
         if y in x.split():

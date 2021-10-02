@@ -1,8 +1,9 @@
-from Viz_Chart_Functions import create_expected_player_graph, hbarplot_players, stacked_hbarplot_players_grid, cumm_calc_gw,hbarplot_players_colours,hbarplot_players_colours_hatch
-from constants import positions,path
-import pandas as pd
+from Viz_Chart_Functions import create_expected_player_graph, stacked_hbarplot_players_grid,\
+    hbarplot_players_grid,hbarplot_players_colours,hbarplot_players_colours_hatch,create_expected_player_graph_size
+from constants import *
 import os
 os.chdir(path)
+
 
 def hbar_player(df, variables, season, gameweek_range, sort, x1_title, x2_title, y, N,sort_name):
     # Sum over mins per name and per season
@@ -24,21 +25,19 @@ def hbar_player(df, variables, season, gameweek_range, sort, x1_title, x2_title,
     x1 = variables[0]
     x2 = variables[1]
 
-    # plot top X overacheivers
-    filepath=f"{x1}_{x2},Top {N} overperformers by {sort_name}"
+    # plot top X player_scatter
+    filepath=f"Top {N} overperformers by {sort_name}"
     df_1 = PL_data_season_filter[(PL_data_season_filter[x1] >= 1)]
-    df_1 = df_1.sort_values(by=[sort], ascending=False).head(N)
-    hbarplot_players(df_1, x1, x2, y, x1_title, x2_title, "", f"Top {N} overperformers by {sort_name}",
-                     gameweekrange=gameweek_range,filepath=filepath)
+    hbarplot_players_grid(df_1, gameweek_range, N, sort_name, filepath,
+                                  x1,x2,x1_title, x2_title,f"Top {N} overperformers by {sort_name}",sort,boo=False)
 
     # plot top X underacheivers
-    filepath=f"{x1}_{x2},Top {N} underperformers by {sort_name}"
-    df_1 = PL_data_season_filter[(PL_data_season_filter[x2]) > 0.1]
-    df_1 = df_1.sort_values(by=[sort], ascending=True).head(N)
-    hbarplot_players(df_1, x1, x2, y, x1_title, x2_title, "", f"Top {N} underperformers by {sort_name}",
-                     gameweekrange=gameweek_range,filepath=filepath)
+    filepath=f"Top {N} underperformers by {sort_name}"
+    df_1 = PL_data_season_filter[(PL_data_season_filter[x2]) > 0]
+    hbarplot_players_grid(df_1, gameweek_range, N, sort_name, filepath,
+                          x1, x2, x1_title, x2_title, f"Top {N} underperformers by {sort_name}", sort,boo=True)
     # plot top xGI
-    filepath=f"{x1}_{x2},Top {N} players by {sort_name}"
+    filepath=f"Top {N} players by {sort_name}"
     df_1 = PL_data_season_filter
     df_1 = df_1.sort_values(by=[x2], ascending=False).head(N)
 
@@ -47,7 +46,7 @@ def hbar_player(df, variables, season, gameweek_range, sort, x1_title, x2_title,
 
     # Plot stacked xG by Gameweek
     df_stacked = PL_data_season_filter[["Name", "Gameweek", x2]]
-    stacked_hbarplot_players_grid(PL_data_season_filter, gameweek_range, N, sort_name, positions, filepath,
+    stacked_hbarplot_players_grid(PL_data_season_filter, gameweek_range, N, sort_name, filepath,
                                   x2, x2_title)
 def hbar_player_hatch(df, variables, season, gameweek_range, sort, x1_title, x2_title, y, N,sort_name):
     # Sum over mins per name and per season
@@ -73,12 +72,11 @@ def hbar_player_hatch(df, variables, season, gameweek_range, sort, x1_title, x2_
     # plot top xGI breakdown by xA and xG
     df_1 = PL_data_season_filter
     df_1 = df_1.sort_values(by=[x2], ascending=False).head(N)
-    filepath=f"{x1}_{x2},Top {N} Players by {sort_name}"
+    filepath=f"Top {N} Players by {sort_name}"
     hbarplot_players_colours_hatch(df_1,x3,x2, y, x2_title, "", f"Top {N} players by {sort_name}",
                              gameweekrange=gameweek_range, positions=positions,filepath=filepath)
-def player_scatter(df, variables, season, x1_text, x2_text, gameweek_range, q):
+def player_scatter(df, variables, season, x1_text, x2_text, gameweek_range, q,marker_size=False):
     # Sum over mins per name and per season
-    df_sum = df.groupby(["Name", "Season", "Team", "Colours"]).sum().reset_index()
     variables_p90 = [x + " per 90" for x in variables]
     columns = ["Name", "Season", "Gameweek", "Position", "Mins", "Colours"]
     PL_data_all = df[columns + variables]
@@ -107,11 +105,16 @@ def player_scatter(df, variables, season, x1_text, x2_text, gameweek_range, q):
     # Add per 90 stats
     for x in variables:
         PL_data_season[f"{x} per 90"] = PL_data_season[x] * 90 / PL_data_season["Mins"]
-    PL_data_season = PL_data_season[PL_data_season["Mins"] > ((B + 1) - A) * 90 * 0.5]
+    PL_data_season = PL_data_season[PL_data_season["Mins"] > ((B + 1) - A) * 90 * 0.40]
 
     # Graph Inputs
     x1 = variables_p90[0]
     x2 = variables_p90[1]
+    if marker_size:
+        x3=variables_p90[2]
+    else:
+        pass
+
     y = "Name"
 
     # x v y scatter
@@ -137,5 +140,11 @@ def player_scatter(df, variables, season, x1_text, x2_text, gameweek_range, q):
         df_1 = PL_data_season[(PL_data_season[x1] >= threshold1) & (PL_data_season["Position"] == position) | (
                     PL_data_season[x2] >= threshold2) & (PL_data_season["Position"] == position)]
         plottitle = f"Top {int((q) * 100)}% of performers, at least {int(((B + 1) - A) * 90 * 0.5)} mins played"
-        create_expected_player_graph(df_1, x1, x2, y, x1_text, x2_text, position, plottitle,
-                                     gameweekrange=gameweek_range)
+        if marker_size:
+            create_expected_player_graph_size(df_1, x1, x2, y, x1_text, x2_text, position, plottitle,
+                                     gameweekrange=gameweek_range,marker_size=x3)
+        else:
+            create_expected_player_graph(df_1, x1, x2, y, x1_text, x2_text, position, plottitle,
+                                              gameweekrange=gameweek_range)
+
+

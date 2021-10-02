@@ -1,9 +1,14 @@
 import pandas as pd
 path=r"C:\Users\ameil\Documents\Viz Saves\Player"
-DATADir=r"C:\Users\ameil\Documents\GitHub\Historical data by gameweek.csv"
+DATADir=r"C:\Users\ameil\Documents\Historical data by gameweek.csv"
 features = ["involvement", "distribution", "goal-threat", "defending", "set-pieces", "kpi-attacking", "kpi-defending","expected"]
 teams = pd.DataFrame()
-teams["Team"] = ['ARS','AVL','BHA','BUR','CHE','CRY','EVE','FUL','LEE','LEI','LIV','MCI','MUN','NEW','SHU','SOU','TOT','WBA','WHU','WOL',"BRE","WAT","NOR"]
+teams["Team"] = ['ARS','AVL','BHA','BUR','CHE','CRY','EVE','FUL','LEE','LEI','LIV','MCI','MUN','NEW','SHU','SOU','TOT','WBA','WHU','WOL',"BRE","WAT","NOR","TOT","LEI","MCI","MUN"]
+teams["Full Name"]=["Arsenal","Aston Villa","Brighton","Burnley","Chelsea","Crystal Palace","Everton","Fulham","Leeds","Leicester City","Liverpool","Man City","Man Utd",
+"Newcastle","Sheff Utd","Southampton","Tottenham","West Brom","West Ham","Wolves","Brentford","Watford","Norwich","Spurs","Leicester","Manchester City","Manchester United"]
+dict_team={k:v for k,v in zip(teams["Team"], teams["Full Name"])}
+
+
 colours = ["#EE3B3B", "#942257", "#afd6f0", "#631938"
     , "#1c19a8", "#500678", "#3d64e3", "#eff0e9"
     , "#eff0e9", "#4157c4"
