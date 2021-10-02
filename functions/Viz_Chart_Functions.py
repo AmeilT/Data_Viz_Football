@@ -7,11 +7,11 @@ import networkx as nx
 import pandas as pd
 import math
 
-from data_viz_constants import title_font, title_size, label_size, text_colour, back_colour, y_equals_x
-from constants import positions,pos_colours,path,teams
+from constants.data_viz_constants import title_font, title_size, label_size, text_colour, back_colour
+from constants.constants import positions,pos_colours,path,teams,DATADir
 import matplotlib.patches as patches
 
-def import_data(DATADir):
+def import_data():
     df = pd.read_csv(DATADir)
     df = df.rename(columns={"GW ID": "Gameweek"})
     df = df.merge(teams, on=["Team"])

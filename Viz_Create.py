@@ -1,5 +1,5 @@
-from Viz_Chart_Functions import import_data
-from Viz_Combine_Charts import player_scatter,hbar_player,hbar_player_hatch
+from functions.Viz_Chart_Functions import import_data
+from functions.Viz_Combine_Charts import player_scatter,hbar_player,hbar_player_hatch
 
 season = 2021
 gameweek_range = [1, 6]

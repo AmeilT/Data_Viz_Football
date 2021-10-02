@@ -1,6 +1,6 @@
 from Viz_Chart_Functions import create_expected_player_graph, stacked_hbarplot_players_grid,\
     hbarplot_players_grid,hbarplot_players_colours,hbarplot_players_colours_hatch,create_expected_player_graph_size
-from constants import *
+from constants.constants import *
 import os
 os.chdir(path)
 
