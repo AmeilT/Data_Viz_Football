@@ -17,9 +17,10 @@ colours = ["#EE3B3B", "#942257", "#afd6f0", "#631938"
     , "#022873", "#70072f", "#f59247","#8f1e07","#e3df5f","#ebe307"]
 dict_team={k:v for k,v in zip(teams["Team"], colours)}
 teams["Colours"]=teams['Team'].map(dict_team)
+teams["image_path"]=teams["Full Name"]+".png"
+
 pos_colours = ['green', 'blue', 'cyan']
 positions=["Defender","Midfielder","Forward"]
-
 columns_used = ['Name',
                 'Season',
                 'Position', "GW ID",

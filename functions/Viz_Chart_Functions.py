@@ -7,9 +7,26 @@ import networkx as nx
 import pandas as pd
 import math
 
-from constants.data_viz_constants import title_font, title_size, label_size, text_colour, back_colour
 from constants.constants import positions,pos_colours,path,teams,DATADir
 import matplotlib.patches as patches
+
+title_font="Franklin Gothic Medium"
+title_size=40
+label_font="Franklin Gothic Medium"
+label_size=9
+text_colour="w"
+back_colour="#020530"
+
+def namescleaner(x):
+    for y in ["van ", "Van ", "de", "De", "el", "El","C"]:
+        if y in x.split():
+            return x
+        else:
+            pass
+    if len(x.split())==1:
+        return x
+    else:
+        return x.split()[1]
 
 def import_data():
     df = pd.read_csv(DATADir)
@@ -21,6 +38,7 @@ def import_data():
     df["Attempts"]=[0 if math.isinf(x) else x for x in df["Attempts"]]
     df["npxG"]=df["GoalsxG"]-0.8*df["Goals from Penalties"]
     df["DeltaAssists"]=(df["Assists"]-df["Chances Created"])
+    return df
 
 def hex_to_rgb(hx, hsl=True):
     """Converts a HEX code into RGB or HSL.
@@ -180,7 +198,7 @@ def create_expected_player_graph_size(data, x1, x2, y, xtitle, ytitle,position, 
     fig.savefig(filepath)
 
 def hbarplot(data, x1, x2, y, ytitle, xtitle, plottitle, gameweekrange,filepath):
-    sns.set_theme(style="whitegrid")
+    sns.set(style="whitegrid")
 
     # Initialize the matplotlib figure
     fig, axes = plt.subplots(figsize=(18, 15))
@@ -232,7 +250,7 @@ def hbarplot(data, x1, x2, y, ytitle, xtitle, plottitle, gameweekrange,filepath)
     fig.savefig(filepath)
 
 def hbarplot_players(data, x1, x2, y, x1title,x2title,ytitle, plottitle, gameweekrange,filepath):
-    sns.set_theme(style="whitegrid")
+    sns.set(style="whitegrid")
 
     # Initialize the matplotlib figure
     fig, axes = plt.subplots(figsize=(6, 15))
@@ -282,7 +300,7 @@ def hbarplot_players(data, x1, x2, y, x1title,x2title,ytitle, plottitle, gamewee
     fig.set_size_inches(12.6, 6.7)
     fig.savefig(filepath)
 def hbarplot_players_colours(data, x1, y, x1title,ytitle, plottitle, gameweekrange,positions=positions,pos_colours=pos_colours,N=15,filepath=path):
-    sns.set_theme(style="whitegrid")
+    sns.set(style="whitegrid")
 
     # Initialize the matplotlib figure
     fig, axes = plt.subplots(figsize=(6, 15))
@@ -331,7 +349,7 @@ def hbarplot_players_colours(data, x1, y, x1title,ytitle, plottitle, gameweekran
     fig.set_size_inches(12.6, 6.7)
     fig.savefig(filepath)
 def hbarplot_players_colours_hatch(data, x3,x2, y, x1title,ytitle, plottitle, gameweekrange,positions=positions,pos_colours=pos_colours,N=15,filepath=path):
-    sns.set_theme(style="whitegrid")
+    sns.set(style="whitegrid")
 
     # Initialize the matplotlib figure
     fig, axes = plt.subplots(figsize=(6, 15))
@@ -392,7 +410,7 @@ def hbarplot_players_colours_hatch(data, x3,x2, y, x1title,ytitle, plottitle, ga
     fig.set_size_inches(12.6, 6.7)
     fig.savefig(filepath)
 def stacked_hbarplot_players(data,y, xtitle, plottitle, gameweekrange,filepath):
-    sns.set_theme(style="whitegrid")
+    sns.set(style="whitegrid")
 
     # Initialize the matplotlib figure
     fig, axes = plt.subplots()
@@ -455,7 +473,7 @@ def stacked_hbarplot_players_grid(PL_data_season_filter,gameweek_range,N,sort_na
     ncolumns=2
     fig, axes = plt.subplots(nrows,ncolumns,sharex=True)
     axes = axes.flatten()
-    sns.set_theme(style="whitegrid")
+    sns.set(style="whitegrid")
 
     # colours
     backcolour = "#020530"
@@ -530,7 +548,7 @@ def hbarplot_players_grid(data,gameweek_range,N,sort_name,filepath,x1,x2,x1_titl
     ncolumns=2
     fig, axes = plt.subplots(nrows,ncolumns,sharex=True)
     axes = axes.flatten()
-    sns.set_theme(style="whitegrid")
+    sns.set(style="whitegrid")
 
     # colours
     backcolour = "#020530"
@@ -598,16 +616,6 @@ def hbarplot_players_grid(data,gameweek_range,N,sort_name,filepath,x1,x2,x1_titl
     sns.despine(left=True, bottom=True)
     fig.set_size_inches(12.6, 6.7)
     fig.savefig(filepath)
-def namescleaner(x):
-    for y in ["van ", "Van ", "de", "De", "el", "El","C"]:
-        if y in x.split():
-            return x
-        else:
-            pass
-    if len(x.split())==1:
-        return x
-    else:
-        return x.split()[1]
 
 def cumm_calc_gw(df,gw_list,N):
     for gw in gw_list:
